@@ -1,5 +1,9 @@
 package net.prihoda.pdf
 
+import java.io.FileOutputStream
+
+import com.typesafe.config.ConfigFactory
+
 import scala.concurrent.duration._
 import akka.actor.{Props, ActorSystem}
 import akka.pattern.ask
@@ -21,7 +25,7 @@ class AcroformFillerActorTest
 
   //implicit val timeout = Timeout(20.seconds)
 
-  val filler = system.actorOf(Props[AcroformFillerActor])
+  val filler = system.actorOf(Props(classOf[AcroformFillerActor], ConfigFactory.load()))
 
   val document: Document = ByteString(IOUtils.toByteArray(getClass.getResourceAsStream("/nyan_form.pdf")))
 
@@ -43,7 +47,7 @@ class AcroformFillerActorTest
       filler ! PrepareDocument(handle)
       expectMsgPF() {
         case Some(PreparedDocument(fields)) =>
-          fields.toSeq should have length 2
+          fields should have size 2
           fields should contain("HELLO")
           fields should contain("WORLD")
       }
@@ -51,7 +55,17 @@ class AcroformFillerActorTest
 
     "not return a prepared document for unknown handle" is pending
 
-    "render a PDF from prepared document and data" is pending
+    "render a PDF from prepared document and data" in {
+       filler ! HandleDocument(document)
+      val handle = expectMsgClass(classOf[DocumentHandle])
+
+      filler ! RenderDocument(handle, Map("HELLO" -> "Ahoj", "WORLD" -> "Světe"))
+      expectMsgPF() {
+        case Some(RenderedDocument(pdf)) =>
+          pdf.length should be > 0
+          IOUtils.write(pdf.toArray, new FileOutputStream("./target/rendered-output.pdf"))
+      }
+    }
 
   }
 

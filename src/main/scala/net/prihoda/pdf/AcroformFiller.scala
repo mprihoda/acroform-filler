@@ -1,10 +1,12 @@
 package net.prihoda.pdf
 
+import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
 import akka.util.{Timeout, ByteString}
-import com.itextpdf.text.pdf.PdfReader
+import com.itextpdf.text.pdf.{BaseFont, PdfStamper, PdfReader}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import collection.immutable.Set
 
@@ -14,6 +16,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 object AcroformFiller {
 
@@ -48,18 +51,31 @@ object AcroformFiller {
 
 }
 
-class AcroformDocumentActor(document: AcroformFiller.Document) extends Actor with ActorLogging {
+class AcroformDocumentActor(document: AcroformFiller.Document, config: Config = ConfigFactory.load()) extends Actor with ActorLogging {
 
   import AcroformFiller._
+
+  private val fontPath = Try(config.getString("acroform.substitutionFont")).toOption
+  private val font = fontPath.map(path => BaseFont.createFont(path, BaseFont.CP1250, true))
 
   override def receive: Receive = {
     case PrepareDocument(_) =>
       val reader = new PdfReader(document.toArray)
       sender() ! PreparedDocument(reader.getAcroFields.getFields.keySet().asScala.toSet)
+    case RenderDocument(_, data) =>
+      // TODO: process asynchronously?
+      val out = new ByteArrayOutputStream
+      val reader = new PdfReader(document.toArray)
+      val stamper = new PdfStamper(reader, out)
+      val fields = stamper.getAcroFields
+      font.foreach(fields.addSubstitutionFont)
+      for ((key, value) <- data) fields.setField(key, value)
+      stamper.close()
+      sender() ! RenderedDocument(ByteString(out.toByteArray))
   }
 }
 
-class AcroformFillerActor extends Actor with ActorLogging {
+class AcroformFillerActor(config: Config = ConfigFactory.load()) extends Actor with ActorLogging {
 
   import AcroformFiller._
 
@@ -75,7 +91,7 @@ class AcroformFillerActor extends Actor with ActorLogging {
     case HandleDocument(doc) =>
       val handle = DocumentHandle(doc)
       sender() ! handle
-      context.become(route(documentActors + (handle -> context.actorOf(Props(classOf[AcroformDocumentActor], doc)))))
+      context.become(route(documentActors + (handle -> context.actorOf(Props(classOf[AcroformDocumentActor], doc, config)))))
     case request: DocumentRequest => process(request, documentActors.get)
   }
 
