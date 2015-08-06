@@ -1,9 +1,5 @@
-minimal-scala-akka-http-seed
+Acroform Filler
 =========================
 
-This is a seed project to create basic akka http projects.
+This is a simple project based on minimal-akka-http activator template to help fill acroform PDF forms using iText via REST API.
 
-* Has *Akka*, *Akka Stream*, *Akka Http*, *Scalaz*, *ScalaTest* and *ScalaMock* at their latest versions as dependencies.
-* Has *sbt-scalariform*, *sbt-scapegoat*, *scalastyle-sbt-plugin*,
-  *sbt-scoverage*, *sbt-revolver*, *sbt-native-packager*  sbt plugins
-* Test and it folders are setup.
