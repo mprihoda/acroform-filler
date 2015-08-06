@@ -42,11 +42,10 @@ class AcroformFillerActorTest
 
       filler ! PrepareDocument(handle)
       expectMsgPF() {
-        case Some(PreparedDocument(fields)) => {
+        case Some(PreparedDocument(fields)) =>
           fields.toSeq should have length 2
           fields should contain("HELLO")
           fields should contain("WORLD")
-        }
       }
     }
 

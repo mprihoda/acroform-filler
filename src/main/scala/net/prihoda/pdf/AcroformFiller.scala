@@ -19,11 +19,17 @@ object AcroformFiller {
 
   type Document = ByteString
   type DocumentDigest = ByteString
+  type FieldData = Map[String, String]
 
   sealed trait Request
 
   case class HandleDocument(document: Document) extends Request
-  case class PrepareDocument(handle: DocumentHandle) extends Request
+
+  abstract class DocumentRequest(val handle: DocumentHandle) extends Request
+
+  case class PrepareDocument(_handle: DocumentHandle) extends DocumentRequest(_handle)
+
+  case class RenderDocument(_handle: DocumentHandle, data: FieldData) extends DocumentRequest(_handle)
 
   sealed trait Response
 
@@ -37,6 +43,8 @@ object AcroformFiller {
   }
 
   case class PreparedDocument(fields: Set[String]) extends Response
+
+  case class RenderedDocument(document: Document) extends Response
 
 }
 
@@ -68,10 +76,12 @@ class AcroformFillerActor extends Actor with ActorLogging {
       val handle = DocumentHandle(doc)
       sender() ! handle
       context.become(route(documentActors + (handle -> context.actorOf(Props(classOf[AcroformDocumentActor], doc)))))
-    case p@PrepareDocument(handle) =>
-      documentActors.get(handle) match {
-        case Some(actorRef) => (actorRef ? p).map(Option(_)) pipeTo sender()
-        case None => sender() ! None
-      }
+    case request: DocumentRequest => process(request, documentActors.get)
   }
+
+  private def process(request: DocumentRequest, actorFactory: (DocumentHandle) => Option[ActorRef]) =
+    actorFactory(request.handle) match {
+      case Some(actorRef) => (actorRef ? request).map(Option(_)) pipeTo sender()
+      case None => sender() ! None
+    }
 }
