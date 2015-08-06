@@ -2,10 +2,18 @@ package net.prihoda.pdf
 
 import java.security.MessageDigest
 
-import akka.actor.{ActorLogging, Actor}
-import akka.actor.Actor.Receive
-import akka.actor.Status.Failure
-import akka.util.ByteString
+import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import akka.util.{Timeout, ByteString}
+import com.itextpdf.text.pdf.PdfReader
+
+import collection.immutable.Set
+
+import akka.pattern.{ask, pipe}
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+import scala.collection.JavaConverters._
 
 object AcroformFiller {
 
@@ -15,6 +23,7 @@ object AcroformFiller {
   sealed trait Request
 
   case class HandleDocument(document: Document) extends Request
+  case class PrepareDocument(handle: DocumentHandle) extends Request
 
   sealed trait Response
 
@@ -27,13 +36,42 @@ object AcroformFiller {
     })
   }
 
+  case class PreparedDocument(fields: Set[String]) extends Response
+
 }
 
-class ActorformFillerActor extends Actor with ActorLogging {
+class AcroformDocumentActor(document: AcroformFiller.Document) extends Actor with ActorLogging {
 
   import AcroformFiller._
 
   override def receive: Receive = {
-    case HandleDocument(doc) => sender ! DocumentHandle(doc)
+    case PrepareDocument(_) =>
+      val reader = new PdfReader(document.toArray)
+      sender() ! PreparedDocument(reader.getAcroFields.getFields.keySet().asScala.toSet)
+  }
+}
+
+class AcroformFillerActor extends Actor with ActorLogging {
+
+  import AcroformFiller._
+
+  import context.dispatcher
+
+  implicit val timeout = Timeout(60.seconds)
+
+  override def receive: Receive = route(Map.empty)
+
+  // TODO: clean up unused the document actors
+
+  private def route(documentActors: Map[DocumentHandle, ActorRef]): Receive = {
+    case HandleDocument(doc) =>
+      val handle = DocumentHandle(doc)
+      sender() ! handle
+      context.become(route(documentActors + (handle -> context.actorOf(Props(classOf[AcroformDocumentActor], doc)))))
+    case p@PrepareDocument(handle) =>
+      documentActors.get(handle) match {
+        case Some(actorRef) => (actorRef ? p).map(Option(_)) pipeTo sender()
+        case None => sender() ! None
+      }
   }
 }
