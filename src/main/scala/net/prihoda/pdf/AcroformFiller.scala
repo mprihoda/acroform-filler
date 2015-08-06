@@ -70,6 +70,7 @@ class AcroformDocumentActor(document: AcroformFiller.Document, config: Config = 
       val fields = stamper.getAcroFields
       font.foreach(fields.addSubstitutionFont)
       for ((key, value) <- data) fields.setField(key, value)
+      stamper.setFormFlattening(true)
       stamper.close()
       sender() ! RenderedDocument(ByteString(out.toByteArray))
   }

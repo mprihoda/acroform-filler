@@ -2,17 +2,12 @@ package net.prihoda.pdf
 
 import java.io.FileOutputStream
 
+import akka.actor.{ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestKit}
+import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
-
-import scala.concurrent.duration._
-import akka.actor.{Props, ActorSystem}
-import akka.pattern.ask
-import akka.testkit.{ImplicitSender, TestKit, TestActorRef, TestKitBase}
-import akka.util.{Timeout, ByteString}
 import org.apache.commons.io.IOUtils
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers, WordSpec}
-
-import scala.util.Success
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 class AcroformFillerActorTest
   extends TestKit(ActorSystem("testsystem")) with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll {
