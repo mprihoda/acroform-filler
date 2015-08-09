@@ -32,7 +32,7 @@ trait AkkaHttpResolverComponent extends DocumentResolverComponent {
   class AkkaHttpResolver extends DocumentResolver {
     def resolve(locator: DocumentLocator): Future[Document] = {
       for (response <- Http().singleRequest(HttpRequest(HttpMethods.GET, locator))) yield {
-        response.entity.dataBytes
+        response.entity.dataBytes.fold(ByteString.empty)(_ ++ _)
       }
     }
 

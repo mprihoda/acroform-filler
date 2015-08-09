@@ -4,6 +4,7 @@ import java.net.URLDecoder
 
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Sink
+import akka.util.ByteString
 import net.prihoda.pdf.{ FontConfig, AkkaHttpResolverComponent, AcroformFiller }
 import spray.json.{ JsString, JsArray, JsObject }
 

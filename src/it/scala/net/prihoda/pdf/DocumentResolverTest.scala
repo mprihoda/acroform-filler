@@ -1,8 +1,11 @@
 package net.prihoda
 package pdf
 
+import java.security.MessageDigest
+
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
+import akka.util.ByteString
 import org.scalatest.{BeforeAndAfterAll, WordSpec, Matchers}
 
 import scala.concurrent.Await
@@ -18,12 +21,15 @@ class DocumentResolverTest extends WordSpec with TestKitBase with Matchers with 
   "Document resolver" should {
     "resolve a document by URL" in {
       val locator = "http://www.acaeid.cz/Files/D35-Zprava_pro_uzivatele-1.2.pdf"
-      val document = for {
+      val future = for {
         source <- resolver.resolve(locator)
         document <- source.runWith(Sink.head)
       } yield document
 
-      Await.result(document, 20.seconds) should not be 'empty
+      val document = Await.result(future, 20.seconds)
+
+      document should not be 'empty
+      document.length should be(356820)
     }
   }
 
