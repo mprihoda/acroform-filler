@@ -3,14 +3,14 @@ package net.prihoda.pdf
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
-import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import akka.util.{Timeout, ByteString}
-import com.itextpdf.text.pdf.{BaseFont, PdfStamper, PdfReader}
-import com.typesafe.config.{Config, ConfigFactory}
+import akka.actor.{ Props, ActorRef, ActorLogging, Actor }
+import akka.util.{ Timeout, ByteString }
+import com.itextpdf.text.pdf.{ BaseFont, PdfStamper, PdfReader }
+import com.typesafe.config.{ Config, ConfigFactory }
 
 import collection.immutable.Set
 
-import akka.pattern.{ask, pipe}
+import akka.pattern.{ ask, pipe }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -99,6 +99,6 @@ class AcroformFillerActor(config: Config = ConfigFactory.load()) extends Actor w
   private def process(request: DocumentRequest, actorFactory: (DocumentHandle) => Option[ActorRef]) =
     actorFactory(request.handle) match {
       case Some(actorRef) => (actorRef ? request).map(Option(_)) pipeTo sender()
-      case None => sender() ! None
+      case None           => sender() ! None
     }
 }

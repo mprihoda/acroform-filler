@@ -10,7 +10,7 @@ import org.apache.commons.io.IOUtils
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 class AcroformFillerActorTest
-  extends TestKit(ActorSystem("testsystem")) with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll {
+    extends TestKit(ActorSystem("testsystem")) with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll {
 
   import AcroformFiller._
 
@@ -29,7 +29,7 @@ class AcroformFillerActorTest
     "return a document handle for a PDF" in {
       filler ! HandleDocument(document)
       expectMsgPF() {
-        case h:DocumentHandle => h should equal(DocumentHandle(document))
+        case h: DocumentHandle => h should equal(DocumentHandle(document))
       }
     }
 
@@ -51,7 +51,7 @@ class AcroformFillerActorTest
     "not return a prepared document for unknown handle" is pending
 
     "render a PDF from prepared document and data" in {
-       filler ! HandleDocument(document)
+      filler ! HandleDocument(document)
       val handle = expectMsgClass(classOf[DocumentHandle])
 
       filler ! RenderDocument(handle, Map("HELLO" -> "Ahoj", "WORLD" -> "Světe"))
