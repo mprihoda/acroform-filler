@@ -19,7 +19,10 @@ trait Service extends BaseService with AcroformFiller with AkkaHttpResolverCompo
         complete(result)
       } ~ post {
         entity(as[JsObject])(jsData => {
-          val data = jsData.fields.mapValues(_.toString())
+          val data = jsData.fields.mapValues {
+            case JsString(value) => value
+            case _               => ""
+          }
           val result = for {
             source <- resolver.resolve(uri)
             doc <- source.via(pdfFlattenedWith(data)).runWith(Sink.head)
