@@ -24,7 +24,7 @@ trait AcroformFiller {
     Flow[ByteString]
       .map(document => {
         val reader = new PdfReader(document.toArray)
-        reader.getAcroFields.getFields.keySet().asScala.toSet
+        reader.getAcroFields.getFields.keySet().asScala.toSet.filter(!_.endsWith(":signature"))
       })
 
   def pdfFlattenedWith(data: Map[String, String]): Flow[ByteString, ByteString, Unit] =
