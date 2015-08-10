@@ -42,7 +42,7 @@ trait AcroformFiller {
         val out = new ByteArrayOutputStream
         val reader = documentPassword match {
           case Some(pwd) => new PdfReader(document.toArray, pwd.getBytes("UTF-8"))
-          case None => new PdfReader(document.toArray)
+          case None      => new PdfReader(document.toArray)
         }
         val stamper = new PdfStamper(reader, out)
         val fields = stamper.getAcroFields

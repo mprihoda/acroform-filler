@@ -4,7 +4,7 @@ import java.net.URLDecoder
 
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Sink
-import net.prihoda.pdf.{SecurityConfig, FontConfig, AkkaHttpResolverComponent, AcroformFiller}
+import net.prihoda.pdf.{ SecurityConfig, FontConfig, AkkaHttpResolverComponent, AcroformFiller }
 import spray.json.{ JsString, JsArray, JsObject }
 
 trait Service extends BaseService with AcroformFiller with AkkaHttpResolverComponent with FontConfig with SecurityConfig {
