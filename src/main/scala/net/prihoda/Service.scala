@@ -18,8 +18,9 @@ trait Service extends BaseService with AcroformFiller with AkkaHttpResolverCompo
         } yield JsObject(Map("fields" -> JsArray(fields.map(JsString.apply).toArray: _*)))
         complete(result)
       } ~ post {
-        entity(as[JsObject])(jsData => {
-          val data = jsData.fields.mapValues {
+        entity(as[String])(body => {
+          import spray.json._
+          val data = body.parseJson.asJsObject.fields.mapValues {
             case JsString(value) => value
             case _               => ""
           }
