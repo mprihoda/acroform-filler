@@ -17,21 +17,33 @@ trait FontConfig {
   val font = fontPath.map(path => BaseFont.createFont(path, BaseFont.IDENTITY_H, BaseFont.EMBEDDED))
 }
 
+trait SecurityConfig {
+  self: net.prihoda.Config =>
+
+  val documentPassword = Try(config.getString("acroform.password")).toOption
+}
+
 trait AcroformFiller {
-  self: FontConfig =>
+  self: FontConfig with SecurityConfig =>
+
+  private def textFields(reader: PdfReader) =
+    reader.getAcroFields.getFields.keySet().asScala.toSet.filter(!_.endsWith(":signature"))
 
   val pdfAcroFields: Flow[ByteString, Set[String], Unit] =
     Flow[ByteString]
       .map(document => {
         val reader = new PdfReader(document.toArray)
-        reader.getAcroFields.getFields.keySet().asScala.toSet
+        textFields(reader)
       })
 
   def pdfFlattenedWith(data: Map[String, String]): Flow[ByteString, ByteString, Unit] =
     Flow[ByteString]
       .map(document => {
         val out = new ByteArrayOutputStream
-        val reader = new PdfReader(document.toArray)
+        val reader = documentPassword match {
+          case Some(pwd) => new PdfReader(document.toArray, pwd.getBytes("UTF-8"))
+          case None      => new PdfReader(document.toArray)
+        }
         val stamper = new PdfStamper(reader, out)
         val fields = stamper.getAcroFields
         font.foreach { f =>
@@ -40,6 +52,7 @@ trait AcroformFiller {
           }
         }
         for ((key, value) <- data) fields.setField(key, value)
+        textFields(reader).foreach(stamper.partialFormFlattening)
         stamper.setFormFlattening(true)
         stamper.close()
         ByteString(out.toByteArray)

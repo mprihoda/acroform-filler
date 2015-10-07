@@ -4,10 +4,10 @@ import java.net.URLDecoder
 
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Sink
-import net.prihoda.pdf.{ FontConfig, AkkaHttpResolverComponent, AcroformFiller }
+import net.prihoda.pdf.{ SecurityConfig, FontConfig, AkkaHttpResolverComponent, AcroformFiller }
 import spray.json.{ JsString, JsArray, JsObject }
 
-trait Service extends BaseService with AcroformFiller with AkkaHttpResolverComponent with FontConfig {
+trait Service extends BaseService with AcroformFiller with AkkaHttpResolverComponent with FontConfig with SecurityConfig {
   val routes = {
     path(Rest)(p => {
       val uri = URLDecoder.decode(p, "UTF-8")
@@ -18,8 +18,9 @@ trait Service extends BaseService with AcroformFiller with AkkaHttpResolverCompo
         } yield JsObject(Map("fields" -> JsArray(fields.map(JsString.apply).toArray: _*)))
         complete(result)
       } ~ post {
-        entity(as[JsObject])(jsData => {
-          val data = jsData.fields.mapValues {
+        entity(as[String])(body => {
+          import spray.json._
+          val data = body.parseJson.asJsObject.fields.mapValues {
             case JsString(value) => value
             case _               => ""
           }

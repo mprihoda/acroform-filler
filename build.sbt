@@ -18,6 +18,8 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-core-experimental"          % akkaStreamV,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental"    % akkaStreamV,
     "com.itextpdf"      %  "itextpdf"                             % "5.5.6",
+    "org.bouncycastle"  %  "bcprov-jdk15on"                       % "1.49",
+    "org.bouncycastle"  %  "bcpkix-jdk15on"                       % "1.49",
     "org.scalatest"     %% "scalatest"                            % scalaTestV       % "it,test",
     "org.scalamock"     %% "scalamock-scalatest-support"          % scalaMockV       % "it,test",
     "org.scalaz"        %% "scalaz-scalacheck-binding"            % scalazV          % "it,test",
