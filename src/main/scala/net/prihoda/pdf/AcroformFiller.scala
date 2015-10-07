@@ -14,7 +14,7 @@ trait FontConfig {
   self: net.prihoda.Config =>
 
   val fontPath = Try(config.getString("acroform.substitutionFont")).toOption
-  val font = fontPath.map(path => BaseFont.createFont(path, BaseFont.CP1250, true))
+  val font = fontPath.map(path => BaseFont.createFont(path, BaseFont.IDENTITY_H, BaseFont.EMBEDDED))
 }
 
 trait AcroformFiller {
@@ -34,7 +34,11 @@ trait AcroformFiller {
         val reader = new PdfReader(document.toArray)
         val stamper = new PdfStamper(reader, out)
         val fields = stamper.getAcroFields
-        font.foreach(fields.addSubstitutionFont)
+        font.foreach { f =>
+          for (entry <- fields.getFields.entrySet().asScala) {
+            fields.setFieldProperty(entry.getKey, "textfont", f, null)
+          }
+        }
         for ((key, value) <- data) fields.setField(key, value)
         stamper.setFormFlattening(true)
         stamper.close()
