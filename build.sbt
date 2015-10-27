@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 name          := """acroform-filler"""
 organization  := "net.prihoda.pdf"
-version       := "1.0.0-SNAPSHOT"
+version       := "1.0.0"
 scalaVersion  := "2.11.6"
 scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
 
